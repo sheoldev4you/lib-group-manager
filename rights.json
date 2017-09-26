@@ -1,0 +1,23 @@
+[
+  {
+    "ACCESS_TWITTER": {
+      "description": "Allow access to twitter account.",
+      "type": "right",
+      "level": 2
+    }
+  },
+  {
+    "SHOW_BLOG": {
+      "description": "Permit to show blog articles.",
+      "type": "right",
+      "level": 1
+    }
+  },
+  {
+    "TEST_DATA": {
+      "description": "Permit to test all data.",
+      "type": "right",
+      "level": 5
+    }
+  }
+]
