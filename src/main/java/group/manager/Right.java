@@ -32,7 +32,6 @@ public class Right {
                 rightMapper.setLevel(data.getInt("level"));
                 rightList.put(name, rightMapper);
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -57,7 +56,7 @@ public class Right {
         return rights;
     }
 
-    public boolean hasRight(String right) {
+    private boolean hasRight(String right) {
         return (getGoodRight(right) & rightLvl) > 0;
     }
 
