@@ -1,5 +1,28 @@
 # JavaGroupManager
 
+[![](https://jitpack.io/v/tfSheol/JavaGroupManager.svg)](https://jitpack.io/#tfSheol/JavaGroupManager)
+
+## Repository
+
+```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+```
+
+## Dependency
+```xml
+<dependency>
+  <groupId>com.github.tfSheol</groupId>
+  <artifactId>java-group-manager</artifactId>
+  <version>XXX</version>
+</dependency>
+```
+
+## Output
 ```
 add : ACCESS_TWITTER
 Binary path : 1000
