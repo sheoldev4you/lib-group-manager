@@ -2,87 +2,181 @@ package group.manager;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.util.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author sheol on 9/26/17 at 4:48 PM
  * @project JavaGroupManager
  */
 public class Right {
-    private int rightLvl = 0x00;
-    private Map<String, RightMapper> rightList = new HashMap<>();
-    private RightListener rightListener;
+  private static final Logger LOGGER = LoggerFactory.getLogger(Right.class);
+  private static final String INTERNAL_RIGHTS = "internal-rights.json";
+  private static final String TYPE = "right";
+  private static final String FIELD_TYPE = "type";
+  private static final String FIELD_DESCRIPTION = "description";
+  private static final String FIELD_LEVEL = "level";
+  private Path internalRights;
+  private int rightLvl = 0x00;
+  private Map<String, RightMapper> rightList = new HashMap<>();
+  private RightListener.Add add;
+  private RightListener.Delete delete;
 
-    public Right(RightListener rightListener) {
-        this.rightListener = rightListener;
-        try {
-            JSONArray jsonArray = new JSONArray(new String(
-                    Files.readAllBytes(FileSystems.getDefault().getPath(".", "rights.json"))));
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                String name = jsonObject.keys().next();
-                JSONObject data = jsonObject.getJSONObject(name);
-                RightMapper rightMapper = new RightMapper();
-                rightMapper.setName(name);
-                rightMapper.setDescription(data.getString("description"));
-                rightMapper.setLevel(data.getInt("level"));
-                rightList.put(name, rightMapper);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  public Right(RightListener.Add add, RightListener.Delete delete) {
+    initInternalRightPath();
+    this.add = add;
+    this.delete = delete;
+  }
 
-    private int getGoodRight(String right) {
-        if (rightList.containsKey(right)) {
-            return (int) Math.pow(2, rightList.get(right).getLevel() + 1);
-        }
-        return 0;
+  private Path initInternalRightPath() {
+    URL url = Right.class.getClassLoader().getResource("internal-rights.json");
+    if (url != null) {
+      try {
+        internalRights = Paths.get(url.toURI());
+      } catch (URISyntaxException e) {
+        LOGGER.error("{} was not found !", INTERNAL_RIGHTS);
+      }
     }
+  }
 
-    public List<String> getAllRights() {
-        List<String> rights = new ArrayList<>();
-        Iterator<Map.Entry<String, RightMapper>> iterator = rightList.entrySet().iterator();
-        for (; iterator.hasNext(); ) {
-            String right = iterator.next().getKey();
-            if (hasRight(right)) {
-                rights.add(right);
-            }
-        }
-        return rights;
-    }
+  public static void toString(Right instance, String rightToAdd) {
+    LOGGER.info("Right : {}.", rightToAdd);
+    LOGGER.info("Binary path : {}.",instance.getRightLvlBinary());
+    LOGGER.info("Rights list : {}.", instance.getAllRights());
+  }
 
-    private boolean hasRight(String right) {
-        return (getGoodRight(right) & rightLvl) > 0;
-    }
+  public void load() {
+    try {
+      JSONArray jsonArray = new JSONArray(new String(
+          Files.readAllBytes(FileSystems.getDefault().getPath(".", "internal-rights.json"))));
 
-    public void add(String right) {
-        if (rightList.containsKey(right)) {
-            rightLvl |= getGoodRight(rightList.get(right).getName());
-            rightListener.onAddRight(this, right);
-        }
+      for (int i = 0; i < jsonArray.length(); i++) {
+        JSONObject jsonObject = jsonArray.getJSONObject(i);
+        loadRight(jsonObject);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    public void delete(String right) {
-        if (rightList.containsKey(right)) {
-            rightLvl ^= getGoodRight(rightList.get(right).getName());
-            rightListener.onDeleteRight(this, right);
-        }
+  private boolean isJsonStructureValid(JSONObject data) {
+    boolean isValid = false;
+    if (data != null && data.has(FIELD_TYPE)) {
+      isValid = true;
+      if (!TYPE.equals(data.getString(FIELD_TYPE))) {
+        isValid = false;
+        LOGGER.error("Data isn't '{}' type !", TYPE);
+      }
+      if (!data.has("description")) {
+        isValid = false;
+        LOGGER.error("Field '{}' was not found.", FIELD_DESCRIPTION);
+      }
+      if (!data.has("level")) {
+        isValid = false;
+        LOGGER.error("Field '{}' was not found.", FIELD_LEVEL);
+      }
+    } else {
+      LOGGER.error("Data is null or field '{}' was not found.", FIELD_TYPE);
     }
+    return isValid;
+  }
 
-    public void set(int rightLvl) {
-        this.rightLvl = rightLvl;
+  private void loadRight(Object o) {
+    if (o instanceof JSONObject) {
+      loadRight((JSONObject) o);
     }
+  }
 
-    public int getRightLvl() {
-        return rightLvl;
+  public void loadRight(JSONObject jsonObject) {
+    String name = jsonObject.keys().next();
+    JSONObject data = jsonObject.getJSONObject(name);
+    if (isJsonStructureValid(data)) {
+      rightList.put(name, new RightMapper()
+          .withName(name)
+          .withDescription(data.getString(FIELD_DESCRIPTION))
+          .withLevel(data.getInt(FIELD_LEVEL))
+      );
     }
+  }
 
-    public String getRightLvlBinary() {
-        return Integer.toBinaryString(rightLvl);
+  public void loadInternalRights() throws IOException {
+    loadRights(internalRights);
+  }
+
+  public void loadRights(JSONArray jsonArray) {
+    jsonArray.forEach(this::loadRight);
+  }
+
+  public void loadRights(File file) throws IOException {
+    loadRights(new JSONArray(new String(Files.readAllBytes(Paths.get(file.getPath())))));
+  }
+
+  public void loadRights(Path path) throws IOException {
+    loadRights(new JSONArray(new String(Files.readAllBytes(path))));
+  }
+
+  private int getGoodRight(String right) {
+    if (rightList.containsKey(right)) {
+      return (int) Math.pow(2, rightList.get(right).getLevel() + 1d);
     }
+    return 0;
+  }
+
+  public List<String> getAllRights() {
+    List<String> rights = new ArrayList<>();
+    rightList.forEach((right, ignored) -> {
+      if (hasRight(right)) {
+        rights.add(right);
+      }
+    });
+    return rights;
+  }
+
+  private boolean hasRight(String right) {
+    return (getGoodRight(right) & rightLvl) > 0;
+  }
+
+  public void add(String right) {
+    if (rightList.containsKey(right)) {
+      rightLvl |= getGoodRight(rightList.get(right).getName());
+      add.onAddRight(this, right);
+    }
+  }
+
+  public void delete(String right) {
+    if (rightList.containsKey(right)) {
+      rightLvl ^= getGoodRight(rightList.get(right).getName());
+      delete.onDeleteRight(this, right);
+    }
+  }
+
+  public void set(int rightLvl) {
+    this.rightLvl = rightLvl;
+  }
+
+  public Right withRightLvl(int rightLvl) {
+    this.rightLvl = rightLvl;
+    return this;
+  }
+
+  public int getRightLvl() {
+    return rightLvl;
+  }
+
+  public String getRightLvlBinary() {
+    return Integer.toBinaryString(rightLvl);
+  }
 }

@@ -5,7 +5,11 @@ package group.manager;
  * @project JavaGroupManager
  */
 public interface RightListener {
-    void onAddRight(Right instance, String right);
+  interface Add {
+    void onAddRight(Right instance, String rightToAdd);
+  }
 
-    void onDeleteRight(Right instance, String right);
+  interface Delete {
+    void onDeleteRight(Right instance, String rightToDelete);
+  }
 }
