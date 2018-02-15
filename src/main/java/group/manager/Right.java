@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,13 +35,7 @@ public class Right {
   private RightListener.Delete delete;
 
   public Right(RightListener.Add add, RightListener.Delete delete) {
-    initInternalRightPath();
-    this.add = add;
-    this.delete = delete;
-  }
-
-  private Path initInternalRightPath() {
-    URL url = Right.class.getClassLoader().getResource("internal-rights.json");
+    URL url = Right.class.getClassLoader().getResource(INTERNAL_RIGHTS);
     if (url != null) {
       try {
         internalRights = Paths.get(url.toURI());
@@ -50,26 +43,14 @@ public class Right {
         LOGGER.error("{} was not found !", INTERNAL_RIGHTS);
       }
     }
+    this.add = add;
+    this.delete = delete;
   }
 
   public static void toString(Right instance, String rightToAdd) {
     LOGGER.info("Right : {}.", rightToAdd);
     LOGGER.info("Binary path : {}.",instance.getRightLvlBinary());
     LOGGER.info("Rights list : {}.", instance.getAllRights());
-  }
-
-  public void load() {
-    try {
-      JSONArray jsonArray = new JSONArray(new String(
-          Files.readAllBytes(FileSystems.getDefault().getPath(".", "internal-rights.json"))));
-
-      for (int i = 0; i < jsonArray.length(); i++) {
-        JSONObject jsonObject = jsonArray.getJSONObject(i);
-        loadRight(jsonObject);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
   }
 
   private boolean isJsonStructureValid(JSONObject data) {
@@ -113,7 +94,9 @@ public class Right {
   }
 
   public void loadInternalRights() throws IOException {
-    loadRights(internalRights);
+    if (internalRights != null) {
+      loadRights(internalRights);
+    }
   }
 
   public void loadRights(JSONArray jsonArray) {
