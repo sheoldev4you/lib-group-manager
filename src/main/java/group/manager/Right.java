@@ -49,7 +49,7 @@ public class Right {
 
   public static void toString(Right instance, String rightToAdd) {
     LOGGER.info("Right : {}.", rightToAdd);
-    LOGGER.info("Binary path : {}.",instance.getRightLvlBinary());
+    LOGGER.info("Binary path : {}.", instance.getRightLvlBinary());
     LOGGER.info("Rights list : {}.", instance.getAllRights());
   }
 
