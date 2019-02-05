@@ -128,7 +128,7 @@ public class Right {
     return rights;
   }
 
-  private boolean hasRight(String right) {
+  public boolean hasRight(String right) {
     return (getGoodRight(right) & rightLvl) > 0;
   }
 
