@@ -29,6 +29,7 @@ public class Right {
   private static final String FIELD_DESCRIPTION = "description";
   private static final String FIELD_LEVEL = "level";
   private Path internalRights;
+  @Deprecated
   private int rightLvl = 0x00;
   private Map<String, RightMapper> rightList = new HashMap<>();
   private RightListener.Add add;
@@ -47,12 +48,13 @@ public class Right {
     this.delete = delete;
   }
 
-  public static void toString(Right instance, String rightToAdd) {
+  public static void toString(Right instance, String rightToAdd, int rightLvl) {
     LOGGER.info("Right : {}.", rightToAdd);
-    LOGGER.info("Binary path : {}.", instance.getRightLvlBinary());
-    LOGGER.info("Rights list : {}.", instance.getAllRights());
+    LOGGER.info("Binary path : {}.", instance.getRightLvlBinary(rightLvl));
+    LOGGER.info("Rights list : {}.", instance.getAllRights(rightLvl));
   }
 
+  @Deprecated
   private boolean isJsonStructureValid(JSONObject data) {
     boolean isValid = false;
     if (data != null && data.has(FIELD_TYPE)) {
@@ -118,16 +120,21 @@ public class Right {
     return 0;
   }
 
-  public List<String> getAllRights() {
+  public List<String> getAllRights(int rightLvl) {
     List<String> rights = new ArrayList<>();
     rightList.forEach((right, ignored) -> {
-      if (hasRight(right)) {
+      if (hasRight(right, rightLvl)) {
         rights.add(right);
       }
     });
     return rights;
   }
 
+  public boolean hasRight(String right, int rightLvl) {
+    return (getGoodRight(right) & rightLvl) > 0;
+  }
+
+  @Deprecated
   public boolean hasRight(String right) {
     return (getGoodRight(right) & rightLvl) > 0;
   }
@@ -135,31 +142,39 @@ public class Right {
   public void add(String right) {
     if (rightList.containsKey(right)) {
       rightLvl |= getGoodRight(rightList.get(right).getName());
-      add.onAddRight(this, right);
+      add.onAddRight(this, right, rightLvl);
     }
   }
 
   public void delete(String right) {
     if (rightList.containsKey(right)) {
       rightLvl ^= getGoodRight(rightList.get(right).getName());
-      delete.onDeleteRight(this, right);
+      delete.onDeleteRight(this, right, rightLvl);
     }
   }
 
+  @Deprecated
   public void set(int rightLvl) {
     this.rightLvl = rightLvl;
   }
 
+  @Deprecated
   public Right withRightLvl(int rightLvl) {
     this.rightLvl = rightLvl;
     return this;
   }
 
+  @Deprecated
   public int getRightLvl() {
     return rightLvl;
   }
 
+  @Deprecated
   public String getRightLvlBinary() {
+    return Integer.toBinaryString(rightLvl);
+  }
+
+  public String getRightLvlBinary(int rightLvl) {
     return Integer.toBinaryString(rightLvl);
   }
 }

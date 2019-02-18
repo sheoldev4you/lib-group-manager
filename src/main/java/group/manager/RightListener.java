@@ -6,10 +6,10 @@ package group.manager;
  */
 public interface RightListener {
   interface Add {
-    void onAddRight(Right instance, String rightToAdd);
+    void onAddRight(Right instance, String rightToAdd, int rightLvl);
   }
 
   interface Delete {
-    void onDeleteRight(Right instance, String rightToDelete);
+    void onDeleteRight(Right instance, String rightToDelete, int rightLvl);
   }
 }
