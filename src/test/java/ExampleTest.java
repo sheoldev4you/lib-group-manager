@@ -1,5 +1,5 @@
 import group.manager.Right;
-import org.apache.log4j.BasicConfigurator;
+//import org.apache.log4j.BasicConfigurator;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -10,10 +10,10 @@ import java.io.IOException;
 public class ExampleTest {
   private static final Logger LOGGER = LoggerFactory.getLogger(ExampleTest.class);
 
-  @Before
+  /*@Before
   public void loadLogger() {
     BasicConfigurator.configure();
-  }
+  }*/
 
   @Test
   public void testRight() {
